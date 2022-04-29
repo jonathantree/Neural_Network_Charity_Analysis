@@ -17,3 +17,4 @@ And the target class IS_SUCCESSFUL — Was the money used effectively.
 A first-round attempt at training the model was made that used a preprocessed version of the data in which "rare" categorical variables were binned together as a catchall "Other" category. These data were encoded using one-hot encoding, and used in training a validation of the initial model. Subsequent attempts focused on optimizing the model either by further reducing categorical variables in the dataset, allowing the model to train on the entire dataset without and significant preprocessing, or addition of hidden layers and nodes. The results from these attempts are summarized in the results section below.
 
 ## Results
+Currently working on this section. Will be adding a summary report of 5 iterations (trained_application_new_v${num}.h5) of optimization efforts soon. 
