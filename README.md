@@ -396,7 +396,7 @@ def create_model(hp):
     hyperband_iterations=5,
     overwrite=True)
 ```
-### Results from hyperparameter tuning revealed no significant improvements. The project folder checkpoints contains the results from this experiment.
+### Results from hyperparameter tuning revealed no significant improvements. The optimization_project1 folder contains the results from this experiment.
 
 ## Summary
 Given that extensive feature reduction and preprocessing yeilded no improvements on the model accuracy after hyperparameter tuning, future optimization attempts will have to focus on different preprocessing approaches to attempt to improve model accuracy.
