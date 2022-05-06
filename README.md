@@ -1,10 +1,10 @@
 # Deep Learning Binary Classification of Charity Grant Funding Success
 ## Project Overview
-This project aims to design and optimize a deep learning binary classification model using TensorFlow 2 capable of predicting whether applicants will be successful if funded. The data used in developing this model is historical data of more than 34,000 organizations who applied for funding and the result (successul use/unsuccessful use). 
+This project aims to design and optimize a deep learning binary classification model using TensorFlow 2 capable of predicting whether applicants will be successful if funded. The data used in developing this model is historical data of more than 34,000 organizations who applied for funding and the result (successful use/unsuccessful use). 
 
 ## Data Preprocessing
 
-The target class IS_SUCCESSFUL — Was the money used effectively.
+The target class: IS_SUCCESSFUL — Was the money used effectively.
 
 These data contain the following feature classes:
 - APPLICATION_TYPE—Alphabet Soup application type
@@ -16,12 +16,12 @@ These data contain the following feature classes:
 - SPECIAL_CONSIDERATIONS—Special consideration for application
 - ASK_AMT—Funding amount requested.
 
-The following data are neither considered a target or feature and are removed from the data prior to subsequent presporcessing steps:
+The following data are neither considered a target or feature and are removed from the data prior to subsequent preprocessing steps:
 
 - EIN and NAME—Identification columns
 - STATUS—Active status
 
-To streamline preprocessing, a python class with callable cleaning methods was developed. This is the preprocess_class.py file which can be imported and used within the notebooks. Additionally, there is a [preprocessing function](Funcitons/preproc_funcs.py) which can run a full intesnive cleaning process on the data if imported and used. An example of how to use the preprocess_class is shown in the preprocess_test.ipynb notebook. Initial preprocessing steps that led to developing these algorithms are shown in the AlphabetSoupCharity.ipynb jupyter notebook.
+To streamline preprocessing, a python class with callable cleaning methods was developed. This is the preprocess_class.py file which can be imported and used within the notebooks. Additionally, there is a [preprocessing function](Funcitons/preproc_funcs.py) which can run a full intensive cleaning process on the data if imported and used. An example of how to use the preprocess_class is shown in the preprocess_test.ipynb notebook. Initial preprocessing steps that led to developing these algorithms are shown in the AlphabetSoupCharity.ipynb jupyter notebook.
 
 ### Example using the `preprocess_class`
 
@@ -292,6 +292,111 @@ print (dir(pcd))
 
 ```
 
-## Results
+## Model Results
+### Initial Model:
+- Hyperparameters:
+  - Hidden Layers: 2
+    - Layer one: 80 nodes, relu activation function
+    - Layer two: 30 nodes, relu activation function
+  - Output layer: sigmoid activation function
+- Performance: Loss (binary cross-entropy): 0.56 | Accuracy: 72.8%
+
+### All subsequent optimization attempts used a training period of 150 epochs to ensure optimal accuracy had been achieved
+
+### Optimization Attempt #1:
+#### Use the same hyperparameters from the previous model to test if intensive feature reduction improves model performance
+##### *See AlphabetSoupCharity_Optimzation.ipynb for dataset preparation steps
+- Hyperparameters:
+  - Hidden Layers: 2
+    - Layer one: 80 nodes, relu activation function
+    - Layer two: 30 nodes, relu activation function
+  - Output layer: sigmoid activation function
+- Performance: Loss (binary cross-entropy): 0.56 | Accuracy: 72.6%
+
+This result indicates that model performance was not increased from extensive feature reduction and consolidation of feature variables.
+
+### Optimization Attempt #2:
+#### Use the same extensively preprocessed data from the previous model but tune the hyperparameters to investigate if model performance can be improved
+#### Add another hidden layer
+- Hyperparameters:
+  - Hidden Layers: 3
+    - Layer one: 80 nodes, relu activation function
+    - Layer two: 30 nodes, relu activation function
+    - Layer three: 30 nodes, relu activation function
+  - Output layer: sigmoid activation function
+- Performance: Loss (binary cross-entropy): 0.57 | Accuracy: 72.7%
+
+This result indicates that model performance was not increased from addition of a third hidden layer.
+
+### Optimization Attempt #3:
+#### Use the same extensively preprocessed data from the previous model but tune the hyperparameters to investigate if model performance can be improved
+#### Switch back to two hidden layers since the previous addition of a third layer did not produce better accuracy but increase the nodes of the layers to 3X the features for the first layer and half of the first layer nodes in the second
+- Hyperparameters:
+  - Hidden Layers: 2
+    - Layer one: 117 nodes, relu activation function
+    - Layer two: 58 nodes, relu activation function
+  - Output layer: sigmoid activation function
+- Performance: Loss (binary cross-entropy): 0.57 | Accuracy: 72.8%
+
+This result indicates that model performance was not increased from hidden layer node addition. 
+
+### Optimization Attempt #4:
+#### Use the same extensively preprocessed data from the previous model but tune the hyperparameters to investigate if model performance can be improved
+#### Keep the number of layers and node count the same but change the activation function of the two hidden layers 
+- Hyperparameters:
+  - Hidden Layers: 2
+    - Layer one: 117 nodes, tanh activation function
+    - Layer two: 58 nodes, tanh activation function
+  - Output layer: sigmoid activation function
+- Performance: Loss (binary cross-entropy): 0.56 | Accuracy: 72.2%
+
+This result indicates that model performance was not increased from modifying the activation function of the hidden layers. 
 
 ### Hyperparameter Optimization using `keras-tuner`
+### Attempt 5: Use automate hyperparameter tuning using the extensively processed dataset to gain insight in to unexplored possibilities in parameterization
+#### Hyperparameter tuning set up:
+```python
+# Create a method that creates a new Sequential model with hyperparameter options
+def create_model(hp):
+    number_input_features = len(X_train[0])
+    
+    nn_model = tf.keras.models.Sequential()
+
+    # Allow kerastuner to decide which activation function to use in hidden layers
+    activation = hp.Choice('activation',['relu','tanh'])
+    
+    # Allow kerastuner to decide number of neurons in first layer
+    nn_model.add(tf.keras.layers.Dense(units=hp.Int('first_units',
+        min_value=1,
+        max_value=300,
+        step=5), activation=activation, input_dim=number_input_features))
+
+    # Allow kerastuner to decide number of hidden layers and neurons in hidden layers
+    for i in range(hp.Int('num_layers', 1, 5)):
+        nn_model.add(tf.keras.layers.Dense(units=hp.Int('units_' + str(i),
+            min_value=1,
+            max_value=300,
+            step=5),
+            activation=activation))
+    
+    nn_model.add(tf.keras.layers.Dense(units=1, activation="sigmoid"))
+    
+    # Allow kerastuner to decide which optimization function to use
+    optimizers = hp.Choice('optimizer',['Adadelta','Adagrad', 'Adam', 'Adamax', 'FTRL', 'NAdam', 'RMSprop', 'SGD'])
+    
+    # Compile the model
+    nn_model.compile(loss="binary_crossentropy", optimizer=optimizers, metrics=["accuracy"])
+    
+    return nn_model
+    
+  tuner = kt.Hyperband(
+    create_model,
+    objective="val_accuracy",
+    max_epochs=50,
+    hyperband_iterations=5,
+    overwrite=True)
+```
+### Results from hyperparameter tuning revealed no significant improvements. The project folder checkpoints contains the results from this experiment.
+
+## Summary
+Given that extensive feature reduction and preprocessing yeilded no improvements on the model accuracy after hyperparameter tuning, future optimization attempts will have to focus on different preprocessing approaches to attempt to improve model accuracy.
