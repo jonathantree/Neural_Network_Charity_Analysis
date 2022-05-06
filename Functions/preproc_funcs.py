@@ -35,12 +35,6 @@ def intensive_preprocessing():
     for cls in replace_class:
         application_df.CLASSIFICATION = application_df.CLASSIFICATION.replace(cls,"Other")
 
-    # Determine which values to replace if counts are less than 
-    replace_class = list(classification_counts[classification_counts < 500].index)
-    # Replace in dataframe
-    for cls in replace_class:
-        application_df.CLASSIFICATION = application_df.CLASSIFICATION.replace(cls,"Other")
-
     ## Consolidate the AFFILIATION column    
     aff_counts = application_df.value_counts('AFFILIATION')
     # Determine which values to replace if counts are less than 1000
